@@ -626,12 +626,7 @@ impl BluetoothSession {
     }
 
     fn device(&self, id: &DeviceId) -> impl OrgBluezDevice1 + Introspectable + Properties {
-        Proxy::new(
-            "org.bluez",
-            id.object_path.to_owned(),
-            DBUS_METHOD_CALL_TIMEOUT,
-            self.connection.clone(),
-        )
+        self.device_with_timeout(id, DBUS_METHOD_CALL_TIMEOUT)
     }
 
     fn device_with_timeout(&self, id: &DeviceId, timeout: Duration) -> impl OrgBluezDevice1 + Introspectable + Properties {
