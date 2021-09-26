@@ -56,7 +56,7 @@ use uuid::Uuid;
 const DBUS_METHOD_CALL_TIMEOUT: Duration = Duration::from_secs(30);
 // in dbus C lib the max value is #define DBUS_TIMEOUT_INFINITE ((int) 0x7fffffff)
 // 0x7fffffff (the largest 32-bit signed integer) or INT32_MAX
-const DBUS_METHOD_CALL_MAX_TIMEOUT: Duration = Duration::from_secs(u32::MAX as u64);
+const DBUS_METHOD_CALL_MAX_TIMEOUT: Duration = Duration::from_secs(i32::MAX as u64);
 const SERVICE_DISCOVERY_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// An error carrying out a Bluetooth operation.
@@ -640,10 +640,7 @@ impl BluetoothSession {
     }
 
     fn device_with_timeout(&self, id: &DeviceId, timeout: Duration) -> impl OrgBluezDevice1 + Introspectable + Properties {
-        let mut local_timeout_value =  DBUS_METHOD_CALL_TIMEOUT; // use default value
-        if timeout.as_secs() <= DBUS_METHOD_CALL_MAX_TIMEOUT.as_secs() {
-            local_timeout_value = timeout; // take passed external timeout value
-        }
+        let local_timeout_value = timeout.min(DBUS_METHOD_CALL_MAX_TIMEOUT);
         Proxy::new(
             "org.bluez",
             id.object_path.to_owned(),
@@ -713,8 +710,7 @@ impl BluetoothSession {
 
     /// Connect to the given Bluetooth device.
     pub async fn connect(&self, id: &DeviceId) -> Result<(), BluetoothError> {
-        self.device(id).connect().await?;
-        self.await_service_discovery(id).await
+        self.connect_with_timeout(id, DBUS_METHOD_CALL_TIMEOUT).await
     }
 
     /// Connect to the given Bluetooth device with specified timeout.
