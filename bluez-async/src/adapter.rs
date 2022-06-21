@@ -1,13 +1,15 @@
 use bluez_generated::OrgBluezAdapter1Properties;
 use dbus::Path;
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 
 use crate::Modalias;
 use crate::{AddressType, BluetoothError, MacAddress};
 
 /// Opaque identifier for a Bluetooth adapter on the system.
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct AdapterId {
+    #[serde(with = "crate::serde_path")]
     pub(crate) object_path: Path<'static>,
 }
 
@@ -16,6 +18,12 @@ impl AdapterId {
         Self {
             object_path: object_path.to_owned().into(),
         }
+    }
+}
+
+impl From<AdapterId> for Path<'static> {
+    fn from(id: AdapterId) -> Self {
+        id.object_path
     }
 }
 

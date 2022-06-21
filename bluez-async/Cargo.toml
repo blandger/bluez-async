@@ -1,6 +1,6 @@
 [package]
 name = "bluez-async"
-version = "0.4.0"
+version = "0.6.0"
 authors = ["Andrew Walbran <qwandor@google.com>", "David Laban <alsuren@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -10,22 +10,21 @@ keywords = ["ble", "bluetooth", "bluez"]
 categories = ["api-bindings", "hardware-support", "os::linux-apis"]
 
 [dependencies]
-async-trait = "0.1.42"
+async-trait = "0.1.56"
 bitflags = "1.2.1"
 bluez-generated = { version = "0.2.1", path = "../bluez-generated" }
-dbus = { version = "0.9.1", features = ["futures"] }
-dbus-tokio = "0.7.3"
-futures = "0.3.8"
-itertools = "0.10.0"
-log = "0.4.11"
-serde = "1.0.118"
-serde_derive = "1.0.118"
-serde-xml-rs = "0.5.0"
-thiserror = "1.0.23"
-tokio = "1.0.1"
-uuid = "0.8.1"
+dbus = { version = "0.9.5", features = ["futures"] }
+dbus-tokio = "0.7.5"
+futures = "0.3.21"
+itertools = "0.10.3"
+log = "0.4.17"
+serde = { version = "1.0.137", features = ["derive"] }
+serde-xml-rs = "0.5.1"
+thiserror = "1.0.31"
+tokio = { version = "1.19.2", features = ["rt"] }
+uuid = "1.1.2"
 
 [dev-dependencies]
-eyre = "0.6.5"
+eyre = "0.6.8"
 pretty_env_logger = "0.4.0"
-tokio = { version = "1.0.1", features = ["macros", "rt", "rt-multi-thread", "time"] }
+tokio = { version = "1.19.2", features = ["macros", "rt", "rt-multi-thread", "time"] }

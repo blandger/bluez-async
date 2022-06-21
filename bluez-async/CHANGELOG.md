@@ -1,10 +1,56 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
+
+### Breaking changes
+
+- Updated `uuid` dependency to 1.1.2.
+
+## 0.5.5
+
+### New features
+
+- Implemented `serde` `Serialize` and `Deserialize` traits for `AdapterId`, `DeviceId`, `ServiceId`,
+  `CharacteristicId` and `DescriptorId`.
+
+## 0.5.4
+
+### New features
+
+- Added `BluetoothSession::adapter_event_stream` method.
+
+## 0.5.3
+
+### Bugfixes
+
+- Fixed `start_discovery` and `start_discovery_with_filter` to log errors rather than printing them
+  to stdout.
+
+## 0.5.2
+
+### Bugfixes
+
+- Fixed `tokio` dependency to include `rt` feature.
+
+## 0.5.1
+
+### Bugfixes
+
+- Fixed bug with `authenticated-signed-writes` characteristic flag not being recognised due to typo.
+
+## 0.5.0
 
 ### Breaking changes
 
 - Added modalias to `AdapterInfo`.
+
+### New features
+
+- Added `BluetoothSession::connect_with_timeout` method.
+
+### Bugfixes
+
+- Fixed bug where if there were multiple event streams, only one would get each event.
 
 ## 0.4.0
 

@@ -17,6 +17,7 @@ mod introspect;
 mod macaddress;
 mod messagestream;
 mod modalias;
+mod serde_path;
 mod service;
 
 pub use self::adapter::{AdapterId, AdapterInfo};
@@ -283,6 +284,9 @@ impl BluetoothSession {
     ) -> Result<(impl Future<Output = Result<(), SpawnError>>, Self), BluetoothError> {
         // Connect to the D-Bus system bus (this is blocking, unfortunately).
         let (dbus_resource, connection) = dbus_tokio::connection::new_system_sync()?;
+        // Configure the connection to send signal messages to all matching `MsgMatch`es, as we may
+        // have streams with overlapping match rules.
+        connection.set_signal_match_mode(true);
         // The resource is a task that should be spawned onto a tokio compatible
         // reactor ASAP. If the resource ever finishes, you lost connection to D-Bus.
         let dbus_handle = tokio::spawn(async {
@@ -335,7 +339,7 @@ impl BluetoothSession {
             log::trace!("Starting discovery on adapter {}", adapter.id);
             self.start_discovery_on_adapter_with_filter(&adapter.id, discovery_filter)
                 .await
-                .unwrap_or_else(|err| println!("starting discovery failed {:?}", err));
+                .unwrap_or_else(|err| log::error!("starting discovery failed {:?}", err));
         }
         Ok(())
     }
@@ -839,16 +843,28 @@ impl BluetoothSession {
 
     /// Get a stream of events for all devices.
     pub async fn event_stream(&self) -> Result<impl Stream<Item = BluetoothEvent>, BluetoothError> {
-        self.filtered_event_stream(None::<&DeviceId>).await
+        self.filtered_event_stream(None::<&DeviceId>, true).await
+    }
+
+    /// Get a stream of events for a particular adapter. This includes events for all devices it
+    /// discovers or connects to.
+    pub async fn adapter_event_stream(
+        &self,
+        adapter: &AdapterId,
+    ) -> Result<impl Stream<Item = BluetoothEvent>, BluetoothError> {
+        self.filtered_event_stream(Some(adapter), true).await
     }
 
     /// Get a stream of events for a particular device. This includes events for all its
     /// characteristics.
+    ///
+    /// Note that this will not include the device discovered event for that device, as it is
+    /// considered an event for the adapter rather than the device itself.
     pub async fn device_event_stream(
         &self,
         device: &DeviceId,
     ) -> Result<impl Stream<Item = BluetoothEvent>, BluetoothError> {
-        self.filtered_event_stream(Some(device)).await
+        self.filtered_event_stream(Some(device), false).await
     }
 
     /// Get a stream of events for a particular characteristic of a device.
@@ -856,15 +872,17 @@ impl BluetoothSession {
         &self,
         characteristic: &CharacteristicId,
     ) -> Result<impl Stream<Item = BluetoothEvent>, BluetoothError> {
-        self.filtered_event_stream(Some(characteristic)).await
+        self.filtered_event_stream(Some(characteristic), false)
+            .await
     }
 
     async fn filtered_event_stream(
         &self,
         object: Option<&(impl Into<Path<'static>> + Clone)>,
+        device_discovery: bool,
     ) -> Result<impl Stream<Item = BluetoothEvent>, BluetoothError> {
         let mut message_streams = vec![];
-        for match_rule in BluetoothEvent::match_rules(object.cloned()) {
+        for match_rule in BluetoothEvent::match_rules(object.cloned(), device_discovery) {
             let msg_match = self.connection.add_match(match_rule).await?;
             message_streams.push(MessageStream::new(msg_match, self.connection.clone()));
         }

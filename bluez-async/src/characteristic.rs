@@ -1,5 +1,6 @@
 use bitflags::bitflags;
 use dbus::Path;
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::{self, Display, Formatter};
 use uuid::Uuid;
@@ -7,8 +8,9 @@ use uuid::Uuid;
 use crate::{BluetoothError, ServiceId};
 
 /// Opaque identifier for a GATT characteristic on a Bluetooth device.
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct CharacteristicId {
+    #[serde(with = "crate::serde_path")]
     pub(crate) object_path: Path<'static>,
 }
 
@@ -96,7 +98,7 @@ impl TryFrom<Vec<String>> for CharacteristicFlags {
                 "write" => Self::WRITE,
                 "notify" => Self::NOTIFY,
                 "indicate" => Self::INDICATE,
-                "authenticated-signed-write" => Self::SIGNED_WRITE,
+                "authenticated-signed-writes" => Self::SIGNED_WRITE,
                 "extended-properties" => Self::EXTENDED_PROPERTIES,
                 "reliable-write" => Self::RELIABLE_WRITE,
                 "writable-auxiliaries" => Self::WRITABLE_AUXILIARIES,
